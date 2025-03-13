@@ -1,77 +1,151 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Button from './Components/Button';
 import './App.css';
 
-// const App = () => {
-//   const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(false);
-//   const [search, setSearch] = useState('');
+const App = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-//   useEffect(() => {
-//     getData();
-//   }, []);
+  useEffect(() => {
+    getData();
+  }, []);
 
-//   async function getData() {
-//     setLoading(true);
-//     setError(false);
-//     try {
-//       const response = await axios('https://jsonplaceholder.typicode.com/users');
-//       setData(response.data);
-//     } catch (error) {
-//       setError(error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
+  async function getData() {
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await axios('https://fakestoreapi.com/products');
+      setData(response.data);
+      console.log(response.data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-//   // Filtered Data Based on Search
-//   const filteredData = data.filter(
-//     (item) =>
-//       item.name.toLowerCase().includes(search.toLowerCase()) ||
-//       item.username.toLowerCase().includes(search.toLowerCase()) ||
-//       item.email.toLowerCase().includes(search.toLowerCase())
-//   );
+  return (
+    <>
+      <button onClick={getData} disabled={loading}>
+        {loading ? 'Reloading...' : 'Reload Data'}
+      </button>
 
-//   return (
-//     <>
-//       <button onClick={getData} disabled={loading}>
-//         {loading ? 'Reloading...' : 'Reload Data'}
-//       </button>
-      
-//       <input
-//         type="text"
-//         placeholder="Search by name or email"
-//         value={search}
-//         onChange={(e) => setSearch(e.target.value)}
-//       />
+      <div className="container_main">
+        {loading && <h1>Loading...</h1>}
+        {error && <h1>Error: {error}</h1>}
 
-//       <div className="container_main">
-//         {loading && <h1>Loading...</h1>}
-//         {error && <h1>Error: {error}</h1>}
+        {data.length > 0 ? (
+          data.map((item) => (
+            <div key={item.id} style={{margin: '0 auto', textAlign:"center", borderRadius:"20px", border:'none', boxShadow:"0 0 10px rgba(0, 0, 0, 0.2)", width:"20%",
+              display:'flex', flexDirection:"column", justifyContent:"space-around", alignItems:"center",
+            }}>
+              <div style={{margin: '0 auto', border:'none', width:"100%", justifyContent:"center", display:"flex",}}
+              >  
+              <img src={item.image} alt={item.title}  style={{
+                width: '100% !important',
+                maxWidth: '100% !important',
+                margin: '0 auto !important',
+                height:"170px",
+                objectFit: 'cover'
+              }}/>
+              </div>
+              <h1>
+             {item.title.split(" ").slice(0, 3).join(" ")}
+              </h1>
+              <p> <span style={{
+                fontWeight: 'bold'
+              }}>{item.category}</span></p>
+              <p>
+               ${item.price}
+              </p>
+            <Button 
+        text={'View Details'}
+        onClick={() => {
+          setSelectedProduct(item); // Jo product click ho usko store karo
+          setIsOpen(true); // Modal open karo
+        }}
+        bgColor={isHovered ? "red" : "black"} 
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      />
+  </div>
+  
+          ))
+        ) : (
+          <h2>No data available</h2>
+        )}
 
-//         {filteredData.length > 0 ? (
-//           filteredData.map((item) => (
-//             <div key={item.id}>
-//               <h2>{item.id}</h2>
-//               <h1>
-//                 <span>Name:</span> {item.name}
-//               </h1>
-//               <h4>
-//                 <span>Username:</span> {item.username}
-//               </h4>
-//               <p>
-//                 <span>Email:</span> {item.email}
-//               </p>
-//             </div>
-//           ))
-//         ) : (
-//           <h2>No matching results</h2>
-//         )}
-//       </div>
-//     </>
-//   );
-// };
+        {isOpen && selectedProduct && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <div style={{
+              border:'none',
+            }}>
+          <img src={selectedProduct.image} alt={selectedProduct.title} width="150" />
+
+            </div>
+            <div style={{border:'none', width:"100%"}}>
+
+          <h1>{selectedProduct.title}</h1>
+          <p style={{fontWeight:'bold'}}>{selectedProduct.category}</p>
+          <p>{selectedProduct.description}</p>
+          
+          <p style={{fontWeight:'bold'}}><span>Price: </span>{selectedProduct.price}</p>
+          <p>
+            <span style={{fontWeight:'bold'}}>Rating : </span>{selectedProduct.rating.rate}
+
+          </p>
+            </div>
+          <button style={styles.closeButton} onClick={() => setIsOpen(false)}>x</button>
+          </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+const styles = {
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modal: {
+    position: "relative",
+    display: "flex",
+    backgroundColor: "white",
+    padding: "20px",
+    borderRadius: "10px",
+    width: "800px",
+    textAlign: "left",
+    alignItems: "center",
+  },
+  closeButton: {
+    color:'white ',
+    backgroundColor:'black',
+    borderRadius:'50%',
+    padding:'10px',
+    border: 'none',
+    position: "absolute",
+    top: "10px",
+    right: "10px",
+    width: "30px",
+    cursor: "pointer",
+  }
+};
+
 
 
 // // ChatGpt Task 1
@@ -111,27 +185,40 @@ import './App.css';
 //   )
 // }
 
-function App() {
-  const [counter, setCounter] = useState(0);
-  const [parity, setParity] = useState("Even Number"); // ✅ State for Even/Odd
+// function App() {
+//   const [counter, setCounter] = useState(0);
+//   const [parity, setParity] = useState("Even Number"); // ✅ State for Even/Odd
 
-  // ✅ Function to update counter and check Even/Odd
-  const updateCounter = (newValue) => {
-    setCounter(newValue);
-    setParity(newValue % 2 === 0 ? "Even Number" : "Odd Number");
-  };
+//   // ✅ Function to update counter and check Even/Odd
+//   const updateCounter = (newValue) => {
+//     setCounter(newValue);
+//     setParity(newValue % 2 === 0 ? "Even Number" : "Odd Number");
+//   };
 
-  return (
-    <>
-      <button onClick={() => updateCounter(0)}>Reset</button>
-      <button onClick={() => counter > 0 && updateCounter(counter - 1)}>Decrease Number</button>
-      <h1>{counter}</h1>
-      <button onClick={() => updateCounter(counter + 1)}>Increase Number</button>
+//   return (
+//     <>
+//       <button onClick={() => updateCounter(0)}>Reset</button>
+//       <button onClick={() => counter > 0 && updateCounter(counter - 1)}>Decrease Number</button>
+//       <h1>{counter}</h1>
+//       <button onClick={() => updateCounter(counter + 1)}>Increase Number</button>
 
-      <h2>{parity}</h2> {/* ✅ Show Even/Odd */}
-    </>
-  );
-}
+//       <h2>{parity}</h2> {/* ✅ Show Even/Odd */}
+//     </>
+//   );
+// }
+
+// function App() {
+//   const [checkevenodd, setCheckevenodd] = useState(0);
+
+//   return(
+    
+//     <input type="text"  onChange={(e) => setCheckevenodd(e.target.value) % 2 === 0 ? "Even Number" : "Odd Number" } />
+
+
+//   )
+  
+  
+// }
 
 export default App;
 
